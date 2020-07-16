@@ -10,7 +10,7 @@ requires-python = ">=3.5"
 description-file = "README.md"
 author = "Anthony Shaw"
 author-email = "anthonyshaw@apache.org"
-home-page = "https://github.com/tonybaloney/django_xss_fuzzer"
+home-page = "https://github.com/tonybaloney/django-xss-fuzzer"
 requires = ["Django >= 2.0"]
 classifiers = ["License :: OSI Approved :: Apache Software License"]
 
