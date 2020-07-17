@@ -1,15 +1,24 @@
 """
 django-xss-fuzzer: An XSS vulnerability fuzz tester for Django views.
 """
+import os
 
 from django.db.models import Model, QuerySet
 from django.conf import settings
+import logging
 
+
+logger = logging.getLogger(__name__)
 __version__ = '0.1.0'
 
 _DEFAULT_PATTERNS = (
     '<script>throw onerror=eval,\'=console.log\x28\\\'{0}\\\'\x29\'</script>',
-    'x onafterscriptexecute=console.log(\'{0}\')')
+    'x onafterscriptexecute=console.log(\'{0}\')',  # non-quoted attribute escape
+    '<script>console.log`{0}`</script>',  # template strings
+    'x onafterprint=console.log(\'{0}\')',  # non-quoted attribute escape on load
+    '+ADw-script+AD4-console.log(+ACc-{0}+ACc-)+ADw-/script+AD4-',  # UTF-7 charset meta
+    'data:text/javascript;base64,Y29uc29sZS5sb2coJy0tU1VDQ0VTU1tdLS0nKQ==',  # JS-encoded base64, payload is '--SUCCESS[]--'
+)
 
 
 class ViewFuzzerMiddleware:
@@ -67,4 +76,10 @@ class ViewFuzzerMiddleware:
         '''
         Inject the value as a XSS-attack string with the name of the field inside
         '''
-        return self.patterns[self.index].format('--SUCCESS[{0}]--'.format(key))  # nosec
+        if 'XSS_PATTERN' in os.environ:
+            pattern = os.environ['XSS_PATTERN']
+        else:
+            pattern = self.patterns[self.index]
+
+        logger.debug('XSS fuzzer swapping {0} value with {1}'.format(key, pattern))
+        return pattern.format('--SUCCESS[{0}]--'.format(key))  # nosec
