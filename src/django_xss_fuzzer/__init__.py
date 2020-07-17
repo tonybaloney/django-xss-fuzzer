@@ -2,16 +2,14 @@
 django-xss-fuzzer: An XSS vulnerability fuzz tester for Django views.
 """
 
-from random import choice
-
 from django.db.models import Model, QuerySet
 from django.conf import settings
 
 __version__ = '0.1.0'
 
 _DEFAULT_PATTERNS = (
-    '<script>throw onerror=eval,\'=console.log\x28\\\'--SUCCESS[{0}]--\\\'\x29\'</script>',
-    'x onafterscriptexecute=console.log(\'--SUCCESS[{0}]--\')')
+    '<script>throw onerror=eval,\'=console.log\x28\\\'{0}\\\'\x29\'</script>',
+    'x onafterscriptexecute=console.log(\'{0}\')')
 
 
 class ViewFuzzerMiddleware:
@@ -19,6 +17,7 @@ class ViewFuzzerMiddleware:
     Attempts various XSS attacks against the view
     """
     def __init__(self, get_response):
+        self.index = 0
         self.get_response = get_response
         self.patterns = getattr(settings, 'XSS_FUZZER_PATTERNS', _DEFAULT_PATTERNS)
         self.inject_kwargs = getattr(settings, 'XSS_INJECT_KWARGS', False)
@@ -68,4 +67,4 @@ class ViewFuzzerMiddleware:
         '''
         Inject the value as a XSS-attack string with the name of the field inside
         '''
-        return choice(self.patterns).format(key)  # nosec
+        return self.patterns[self.index].format('--SUCCESS[{0}]--'.format(key))  # nosec
