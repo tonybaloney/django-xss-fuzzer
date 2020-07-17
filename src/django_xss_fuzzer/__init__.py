@@ -10,8 +10,8 @@ from django.conf import settings
 __version__ = '0.1.0'
 
 _DEFAULT_PATTERNS = (
-    '<script>throw onerror=eval,\'=console.log\x28\\\'found script-based xss in {0}\\\'\x29\'</script>',
-    'x onafterscriptexecute=console.log(\'found attribute-based xss in {0}\')')
+    '<script>throw onerror=eval,\'=console.log\x28\\\'--SUCCESS[{0}]--\\\'\x29\'</script>',
+    'x onafterscriptexecute=console.log(\'--SUCCESS[{0}]--\')')
 
 
 class ViewFuzzerMiddleware:

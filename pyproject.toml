@@ -16,5 +16,9 @@ classifiers = ["License :: OSI Approved :: Apache Software License"]
 
 [tool.flit.metadata.requires-extra]
 test = [
-    "pytest >= 5.0.0"
+    "pytest >= 5.0.0",
+    "pytest-django",
+    "selenium",
+    "pytest-selenium",
+    "pytest-pythonpath"
 ]
