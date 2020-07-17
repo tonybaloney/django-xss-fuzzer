@@ -13,9 +13,11 @@ __version__ = '0.1.0'
 
 _DEFAULT_PATTERNS = (
     '<script>throw onerror=eval,\'=console.log\x28\\\'{0}\\\'\x29\'</script>',
-    'x onafterscriptexecute=console.log(\'{0}\')',  # non-quoted attribute escape
-    '<script>console.log`{0}`</script>',  # template strings
-    'x onafterprint=console.log(\'{0}\')',  # non-quoted attribute escape on load
+    'x onafterscriptexecute="console.log(\'{0}\')"',  # non-quoted attribute escape
+    'x onafterscriptexecute="console.log(`{0}`)"',  # non-quoted attribute escape with backticks
+    '<script>console.log(`{0}`)</script>',  # template strings
+    'x onafterprint="console.log(\'{0}\')"',  # non-quoted attribute escape on load
+    'x onafterprint="console.log(`{0}`)"',  # non-quoted attribute escape on load with backticks
     '+ADw-script+AD4-console.log(+ACc-{0}+ACc-)+ADw-/script+AD4-',  # UTF-7 charset meta
     'data:text/javascript;base64,Y29uc29sZS5sb2coJy0tU1VDQ0VTU1tdLS0nKQ==',  # JS-encoded base64, payload is '--SUCCESS[]--'
 )

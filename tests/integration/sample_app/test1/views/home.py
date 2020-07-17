@@ -10,5 +10,8 @@ class BasicContextView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['sample'] = "Simple String"
+        context['safe_str'] = "Simple String"
+        context['non_quoted_attribute'] = "Test"
+        context['quoted_attribute'] = "Test"
+        context['direct_js_string'] = "Test"
         return context

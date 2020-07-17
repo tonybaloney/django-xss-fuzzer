@@ -17,3 +17,4 @@ def test_sample(selenium, live_server, pattern):
 
     assert any("--PASS--" in entry['message'] for entry in logs)
     assert not any("--SUCCESS" in entry['message'] for entry in logs), "Found XSS vulnerability using {0}".format(pattern)
+

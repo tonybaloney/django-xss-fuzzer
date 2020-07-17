@@ -4,9 +4,18 @@
 </head>
 <body>
 Sample String:
-    {{ sample | safe }}
+    {{ safe_str | safe }}
+<div class={{ non_quoted_attribute | safe}} >
+    example attribute
+</div>
+<div class="{{ quoted_attribute }}">
+    example tag
+</div>
 <script type="application/javascript">
-    console.log('--PASS--')
+    console.log('--PASS--');
+</script>
+<script type="application/javascript">
+    {{ direct_js_string }}
 </script>
 </body>
 </html>
