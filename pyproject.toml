@@ -12,7 +12,12 @@ author = "Anthony Shaw"
 author-email = "anthonyshaw@apache.org"
 home-page = "https://github.com/tonybaloney/django-xss-fuzzer"
 requires = ["Django >= 2.0"]
-classifiers = ["License :: OSI Approved :: Apache Software License"]
+classifiers = [
+    "License :: OSI Approved :: Apache Software License",
+    "Framework :: Pytest"]
+
+[tool.flit.entrypoints."pytest11"]
+django_xss_fuzzer = "django_xss_fuzzer.pytest_plugin"
 
 [tool.flit.metadata.requires-extra]
 test = [

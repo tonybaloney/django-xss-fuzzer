@@ -2,6 +2,7 @@
 django-xss-fuzzer: An XSS vulnerability fuzz tester for Django views.
 """
 import os
+from collections import namedtuple
 
 from django.db.models import Model, QuerySet
 from django.conf import settings
@@ -9,18 +10,35 @@ import logging
 
 
 logger = logging.getLogger(__name__)
-__version__ = '0.1.0'
+__version__ = '0.2.0'
+_ENV_VAR_NAME = 'XSS_PATTERN'
+_XssPattern = namedtuple('XssPattern', 'string description')
 
-_DEFAULT_PATTERNS = (
-    '<script>throw onerror=eval,\'=console.log\x28\\\'{0}\\\'\x29\'</script>',
-    'x onafterscriptexecute="console.log(\'{0}\')"',  # non-quoted attribute escape
-    'x onafterscriptexecute="console.log(`{0}`)"',  # non-quoted attribute escape with backticks
-    '<script>console.log(`{0}`)</script>',  # template strings
-    'x onafterprint="console.log(\'{0}\')"',  # non-quoted attribute escape on load
-    'x onerror="console.log(\'{0}\')"',  # non-quoted attribute escape on load
-    'x onafterprint="console.log(`{0}`)"',  # non-quoted attribute escape on load with backticks
-    '+ADw-script+AD4-console.log(+ACc-{0}+ACc-)+ADw-/script+AD4-',  # UTF-7 charset meta
-    'data:text/javascript;base64,Y29uc29sZS5sb2coJy0tU1VDQ0VTU1tdLS0nKQ==',  # JS-encoded base64, payload is '--SUCCESS[]--'
+
+class XssPattern(_XssPattern):
+    def __str__(self):
+        return self.string
+
+    def load(self):
+        os.environ[_ENV_VAR_NAME] = self.string
+
+    def succeeded(self, selenium):
+        logs = list(selenium.get_log('browser'))
+        pass_ = any("--PASS--" in entry['message'] for entry in logs)
+        success_ = any("--SUCCESS" in entry['message'] for entry in logs)
+        return pass_ and not success_
+
+
+DEFAULT_PATTERNS = (
+    XssPattern('<script>throw onerror=eval,\'=console.log\x28\\\'{0}\\\'\x29\'</script>', "Script tag with onerror event"),
+    XssPattern('x onafterscriptexecute="console.log(\'{0}\')"',  "non-quoted attribute escape"),
+    XssPattern('x onafterscriptexecute="console.log(`{0}`)"',  "non-quoted attribute escape with backticks"),
+    XssPattern('<script>console.log(`{0}`)</script>',  "template strings"),
+    XssPattern('x onafterprint="console.log(\'{0}\')"',  "non-quoted attribute escape on load"),
+    XssPattern('x onerror="console.log(\'{0}\')"',  "non-quoted attribute escape on load"),
+    XssPattern('x onafterprint="console.log(`{0}`)"',  "non-quoted attribute escape on load with backticks"),
+    XssPattern('+ADw-script+AD4-console.log(+ACc-{0}+ACc-)+ADw-/script+AD4-',  "UTF-7 charset meta"),
+    XssPattern('data:text/javascript;base64,Y29uc29sZS5sb2coJy0tU1VDQ0VTU1tdLS0nKQ==',  "JS-encoded base64, payload is '--SUCCESS[]--'")
 )
 
 
@@ -31,7 +49,7 @@ class ViewFuzzerMiddleware:
     def __init__(self, get_response):
         self.index = 0
         self.get_response = get_response
-        self.patterns = getattr(settings, 'XSS_FUZZER_PATTERNS', _DEFAULT_PATTERNS)
+        self.pattern = getattr(settings, 'XSS_PATTERN', DEFAULT_PATTERNS[self.index].string)
         self.inject_kwargs = getattr(settings, 'XSS_INJECT_KWARGS', False)
         self.inject_context_data = getattr(settings, 'XSS_INJECT_CONTEXT_DATA', True)
 
@@ -76,13 +94,13 @@ class ViewFuzzerMiddleware:
         return response
 
     def _inject_pattern(self, key):
-        '''
+        """
         Inject the value as a XSS-attack string with the name of the field inside
-        '''
-        if 'XSS_PATTERN' in os.environ:
-            pattern = os.environ['XSS_PATTERN']
+        """
+        if _ENV_VAR_NAME in os.environ:
+            pattern = os.environ[_ENV_VAR_NAME]
         else:
-            pattern = self.patterns[self.index]
+            pattern = self.pattern
 
         logger.debug('XSS fuzzer swapping {0} value with {1}'.format(key, pattern))
         return pattern.format('--SUCCESS[{0}]--'.format(key))  # nosec
