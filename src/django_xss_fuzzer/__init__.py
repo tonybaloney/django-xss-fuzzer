@@ -16,8 +16,16 @@ _XssPattern = namedtuple('XssPattern', 'string description')
 
 
 class XssPattern(_XssPattern):
+    def __init__(self):
+        self._message = None
+
     def __str__(self):
         return self.string
+
+    @property
+    def message(self):
+        if self._message:
+            return self._message
 
     def load(self):
         os.environ[_ENV_VAR_NAME] = self.string
@@ -25,8 +33,10 @@ class XssPattern(_XssPattern):
     def succeeded(self, selenium):
         logs = list(selenium.get_log('browser'))
         pass_ = any("--PASS--" in entry['message'] for entry in logs)
-        success_ = any("--SUCCESS" in entry['message'] for entry in logs)
-        return pass_ and not success_
+        success_ = filter(lambda entry: "--SUCCESS" in entry['message'], logs)
+        if success_:
+            self._message = success_[0]
+        return pass_ and not any(success_)
 
 
 DEFAULT_PATTERNS = (
@@ -81,9 +91,9 @@ class ViewFuzzerMiddleware:
                 continue
             if isinstance(value, str):
                 response.context_data[key] = self._inject_pattern(key)
-            if isinstance(value, Model):
+            elif isinstance(value, Model):
                 self._reflect_model(value, key)
-            if isinstance(value, QuerySet):
+            elif isinstance(value, QuerySet):
                 # Exhaust lazy query sets so we can hack the attributes
                 _exhausted = list(value)
                 for i in _exhausted:
