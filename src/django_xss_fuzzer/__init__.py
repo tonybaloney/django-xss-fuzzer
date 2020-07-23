@@ -11,32 +11,28 @@ import logging
 
 logger = logging.getLogger(__name__)
 __version__ = '0.2.0'
-_ENV_VAR_NAME = 'XSS_PATTERN'
+ENV_VAR_NAME = 'XSS_PATTERN'
+X_HEADER_NAME = "X-XSS-Pattern"
 _XssPattern = namedtuple('XssPattern', 'string description')
 
 
 class XssPattern(_XssPattern):
-    def __init__(self):
-        self._message = None
-
     def __str__(self):
         return self.string
 
     @property
     def message(self):
-        if self._message:
+        if hasattr(self, '_message'):
             return self._message
-
-    def load(self):
-        os.environ[_ENV_VAR_NAME] = self.string
+        else:
+            return None
 
     def succeeded(self, selenium):
         logs = list(selenium.get_log('browser'))
-        pass_ = any("--PASS--" in entry['message'] for entry in logs)
-        success_ = filter(lambda entry: "--SUCCESS" in entry['message'], logs)
+        success_ = list(filter(lambda entry: "--SUCCESS" in entry['message'] and entry['level'] == 'INFO', logs))
         if success_:
             self._message = success_[0]
-        return pass_ and not any(success_)
+        return len(success_) > 0
 
 
 DEFAULT_PATTERNS = (
@@ -59,7 +55,6 @@ class ViewFuzzerMiddleware:
     def __init__(self, get_response):
         self.index = 0
         self.get_response = get_response
-        self.pattern = getattr(settings, 'XSS_PATTERN', DEFAULT_PATTERNS[self.index].string)
         self.inject_kwargs = getattr(settings, 'XSS_INJECT_KWARGS', False)
         self.inject_context_data = getattr(settings, 'XSS_INJECT_CONTEXT_DATA', True)
 
@@ -85,7 +80,6 @@ class ViewFuzzerMiddleware:
     def process_template_response(self, request, response):
         if not self.inject_context_data:
             return response
-
         for key, value in response.context_data.items():
             if key == 'view':  # ignore this field
                 continue
@@ -107,10 +101,10 @@ class ViewFuzzerMiddleware:
         """
         Inject the value as a XSS-attack string with the name of the field inside
         """
-        if _ENV_VAR_NAME in os.environ:
-            pattern = os.environ[_ENV_VAR_NAME]
+        if ENV_VAR_NAME in os.environ:
+            pattern = os.environ[ENV_VAR_NAME]
         else:
-            pattern = self.pattern
+            pattern = getattr(settings, 'XSS_PATTERN', DEFAULT_PATTERNS[self.index].string)
 
         logger.debug('XSS fuzzer swapping {0} value with {1}'.format(key, pattern))
         return pattern.format('--SUCCESS[{0}]--'.format(key))  # nosec
