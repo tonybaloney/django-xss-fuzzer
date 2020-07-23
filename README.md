@@ -79,9 +79,9 @@ paths = (
 
 @pytest.mark.django_db()
 @pytest.mark.parametrize('path', paths)
-def test_xss_patterns(selenium, live_server, xss_pattern, path):
-    xss_pattern.load()
-    selenium.get('%s%s' % (live_server.url, path))
+def test_xss_patterns(selenium, live_server, settings, xss_pattern, path):
+    setattr(settings, 'XSS_PATTERN', xss_pattern.string)
+    selenium.get('%s%s' % (live_server.url, path), )
     assert not xss_pattern.succeeded(selenium), xss_pattern.message
 ```
 
@@ -111,7 +111,7 @@ This will configure Chrome as headless and enable logging to capture the XSS fla
 To run PyTest with this plugin, use the `--driver` flag as Chrome and `--driver-path` to point to a downloaded version of the Chrome Driver for the version of Chrome you have installed.
 
 ```console
- $ python -m pytest tests/ --driver Chrome --driver-path ~/Downloads/chromedriver83 -rs -vv
+ $ python -m pytest tests/ --driver Chrome --driver-path /path/to/chromedriver -rs -vv
 ```
 
 Once this is running, you'll see something similar to the following output:
