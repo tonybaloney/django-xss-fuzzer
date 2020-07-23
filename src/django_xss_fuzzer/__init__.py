@@ -10,7 +10,7 @@ import logging
 
 
 logger = logging.getLogger(__name__)
-__version__ = '0.2.0'
+__version__ = '0.3.0'
 ENV_VAR_NAME = 'XSS_PATTERN'
 X_HEADER_NAME = "X-XSS-Pattern"
 _XssPattern = namedtuple('XssPattern', 'string description')
