@@ -27,4 +27,4 @@ jobs:
         flit install --deps develop
     - name: Run Tests
       run: |
-        python -m pytest tests/integration --driver Chrome --driver-path $(CHROMEWEBDRIVER)/chromedriver
+        python -m pytest tests/integration --driver Chrome --driver-path $CHROMEWEBDRIVER/chromedriver
