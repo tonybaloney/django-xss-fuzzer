@@ -143,3 +143,25 @@ The JavaScript code within the onafterscriptexecute would be run by the browser,
 Other examples, would be the use of the `|safe` filter inside the Django template. This filter can be put into Django views without a full-understanding of the ramifications.
 
 For example, in a permanent XSS attack, the database, or memory state could contain a dangerous string.
+
+## Running in CI/CD
+
+GitHub Actions has Chrome and Chromedriver preinstalled on the `ubuntu-latest` image.
+
+You can run the tests with the same flag with the environment variable:
+
+```yaml
+    - name: Run Security Tests
+      run: |
+        python -m pytest tests/your_security_tests --driver Chrome --driver-path $CHROMEWEBDRIVER/chromedriver
+```
+
+Azure Pipelines uses the same image, but has a different syntax. You can run using a script task like this:
+
+```yaml
+- script: |
+    pytest tests/your_security_tests --driver Chrome --driver-path $(CHROMEWEBDRIVER)/chromedriver
+  displayName: 'Run Security tests'
+```
+
+Also use my [pytest-azurepipelines](https://github.com/tonybaloney/pytest-azurepipelines) extension to automate the publishing of test results to the pipelines UI.
