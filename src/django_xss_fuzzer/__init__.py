@@ -10,7 +10,7 @@ import logging
 
 
 logger = logging.getLogger(__name__)
-__version__ = '0.3.0'
+__version__ = '0.3.1'
 ENV_VAR_NAME = 'XSS_PATTERN'
 X_HEADER_NAME = "X-XSS-Pattern"
 _XssPattern = namedtuple('XssPattern', 'string description')
@@ -68,6 +68,8 @@ class ViewFuzzerMiddleware:
 
         # Inject (reflection attack)
         if self.inject_kwargs:
+            if not view_kwargs:
+                return None
             for key, value in view_kwargs.items():
                 if isinstance(value, str):
                     view_kwargs[key] = self._inject_pattern(key)
@@ -79,6 +81,8 @@ class ViewFuzzerMiddleware:
 
     def process_template_response(self, request, response):
         if not self.inject_context_data:
+            return response
+        if not response.context_data:
             return response
         for key, value in response.context_data.items():
             if key == 'view':  # ignore this field
