@@ -62,7 +62,7 @@ To change the malicious string, set the `XSS_PATTERN` variable in your Django se
 
 It's designed to be paired with PyTest, PyTest-Django, and Selenium so that it will try a range of malicious strings until it finds a successful attack vector.
 
-The selenium integration is required so that each view will be rendered and then processed by Chrome. Once Chrome has loaded the page, the tool will inspect the JavaScript log for any occurences of `--SUCCESS[field]--`
+The selenium integration is required so that each view will be rendered and then processed by Chrome. Once Chrome has loaded the page, the tool will inspect the JavaScript log for any occurrences of `--SUCCESS[field]--`
 and then fail the test if one is found.
 
 Here is an example test for the URLs `/` and `/home`:
